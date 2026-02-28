@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<title>Ввв</title>
+<style>
+body {
+    margin: 0;
+    background-color: #f0f0f0;
+    color: black;
+    font-family: Arial, sans-serif;
+    transition: background 0.3s, color 0.3s;
+}
+
+/* Темна тема */
+body.dark {
+    background-color: #1e1e1e;
+    color: white;
+}
+
+/* Верхні кнопки */
+.top-buttons {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+}
+
+.top-buttons img {
+    width: 35px;
+    height: 35px;
+    cursor: pointer;
+    margin-left: 10px;
+    transition: transform 0.4s ease;
+}
+
+/* Ліва панель */
+.sidebar {
+    width: 200px;
+    height: 50vh;
+    background-color: yellow;
+    padding: 15px;
+    box-sizing: border-box;
+    float: left;
+}
+
+.sidebar button {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: white;
+    border: 1px solid black;
+    cursor: pointer;
+}
+
+/* Темна тема панелі */
+body.dark .sidebar {
+    background-color: #333;
+}
+
+body.dark .sidebar button {
+    background-color: #444;
+    color: white;
+    border: 1px solid white;
+}
+
+.content {
+    margin-left: 220px;
+    padding: 20px;
+}
+
+.page { display: none; }
+.page.active { display: block; }
+
+input {
+    padding: 5px;
+    margin-bottom: 10px;
+}
+/* Пів оберт для мови */
+.half-rotate {
+    animation: halfRotate 0.4s ease forwards;
+}
+
+@keyframes halfRotate {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(180deg); }
+}
+@keyframes spinAnim {
+    0% { transform: rotate(0deg); opacity: 1; }
+    50% { transform: rotate(180deg); opacity: 0.6; }
+    100% { transform: rotate(180deg); opacity: 0; }
+}
+#cardsContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+body.dark #cardsContainer div {
+    background: #444;
+}
+.card {
+    width: 250px;
+    font-family: Arial;
+}
+
+.card-wrapper {
+    position: relative;
+    width: 250px;
+    height: 150px;
+    overflow: hidden;
+    border-radius: 12px;
+}
+.archive {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.4s ease, opacity 0.3s ease;
+    opacity: 0;
+}
+
+.archive.open {
+    max-height: 1000px;
+    opacity: 1;
+}
+
+.history-item {
+    border: 1px solid gray;
+    margin: 5px;
+    padding: 8px;
+    border-radius: 6px;
+    transform: translateY(10px);
+    opacity: 0;
+    animation: fadeInUp 0.3s ease forwards;
+}
+
+@keyframes fadeInUp {
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<!-- КНОПКИ У ПРАВОМУ ВЕРХНЬОМУ КУТІ -->
+<div class="top-buttons">
+    <!-- Кнопка мови -->
+    <img id="langIcon"
+	     src="https://static.wikia.nocookie.net/mysingingmonsters/images/6/62/Paironormal_Symbol.png/revision/latest?cb=20251029174251"
+         onclick="toggleLanguage()"
+         title="Змінити мову">
+        <!-- Кнопка теми -->
+    <img id="themeIcon"
+         src="https://static.wikia.nocookie.net/mysingingmonsters/images/1/19/Major_Paironormal_Symbol.png/revision/latest?cb=20260130200508"
+         onclick="toggleTheme()"
+         title="Світла тема">
+</div>
+<div class="sidebar">
+
+    <button onclick="showPage('main')" id="btnMain">Головна</button>
+
+    <button onclick="showPage('codes')" id="btnCodes">Коди</button>
+
+    <button onclick="showPage('login')" id="loginNavBtn">Увійти</button>
+
+    <button onclick="showPage('cardsPage')" id="cardsBtn">Карти</button>
+
+    <button onclick="showPage('adminPanel')" id="adminBtn">Адмін панель</button>
+
+    <button onclick="logout()" id="logoutBtn" style="display:none;">Вийти</button>
+
+</div>
+<div class="content">
+    <!-- Вхід -->
+<div id="login" class="page">
+    <h2 id="loginTitle">Вхід</h2>
+
+    <input type="text" id="username" placeholder="Логін"><br>
+
+    <input type="password" id="password" placeholder="Пароль">
+    <label>
+        <input type="checkbox" onclick="togglePassword()"> Показати пароль
+    </label>
+    <br>
+
+    <button onclick="login()" id="loginBtn">Увійти</button>
+</div>
+
+    <!-- Адмін панель -->
+    <div id="adminPanel" class="page">
+        <h2>Адмін панель</h2>
+        <p>Доступ тільки для адміністратора</p>
+    </div>
+    <!-- Система карт -->
+    <div id="cardsPage" class="page">
+    <h2>Система карт</h2>
+	    <h3>Створити карту</h3>
+    	<input type="text" id="cardName" placeholder="Назва карти">
+    	<input type="text" id="cardImage" placeholder="URL зображення">
+    	<button onclick="createCard()">Створити</button>
+    	<hr>
+    	<div id="cardsContainer"></div>
+        <hr>
+        <h3 id="transferTitle">Переказ</h3>
+
+        <select id="fromCard"></select>
+        <select id="toCard"></select>
+        <input type="number" id="transferAmount" placeholder="Сума">
+        <button onclick="handleTransfer()" id="transferBtn">Переказати</button>
+
+        <hr>
+        <h3 id="historyTitle">Історія</h3>
+
+        <input type="text" id="historySearch" 
+               placeholder="Пошук по карті..."
+               oninput="renderHistory()">
+
+        <div id="historyContainer"></div>
+
+        <button onclick="toggleArchive()" id="archiveBtn">
+            Показати архів
+        </button>
+
+        <div id="archiveContainer" class="archive"></div>
+        </div>
+</div>
+<!-- Головна -->
+<div id="main" class="page active">
+    <h2 id="mainTitle">Головна сторінка</h2>
+    <p id="welcomeText">Ласкаво просимо!</p>
+</div>
+
+<!-- Коди -->
+<div id="codes" class="page">
+    <h2 id="codeTitle">Введіть код</h2>
+    <input type="text" id="codeInput" placeholder="Код">
+    <button onclick="activateCode()" id="activateBtn">Активувати</button>
+    <button onclick="showPage('main')" id="backBtn">Назад</button>
+</div>
+<script>
+/* ================== СИСТЕМА КАРТ ================== */
+
+let cards = JSON.parse(localStorage.getItem("cards")) || [];
+let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
+
+function saveTransactions() {
+    localStorage.setItem("transactions", JSON.stringify(transactions));
+}
+function saveCards() {
+    localStorage.setItem("cards", JSON.stringify(cards));
+}
+
+function createCard() {
+    const name = document.getElementById("cardName").value.trim();
+    const image = document.getElementById("cardImage").value.trim();
+    
+	if (image && !image.startsWith("http")) {
+    alert("URL має починатися з http або https");
+    return;
+}
+    if (!name) {
+        alert("Введіть назву карти!");
+        return;
+    }
+
+    const newCard = {
+        id: Date.now(),
+        name: name,
+        image: image || "https://via.placeholder.com/150",
+        balance: 0
+    };
+
+    cards.push(newCard);
+    saveCards();
+    renderCards();
+
+    document.getElementById("cardName").value = "";
+    document.getElementById("cardImage").value = "";
+}
+
+function renderCards() {
+    const container = document.getElementById("cardsContainer");
+    container.innerHTML = "";
+
+    cards.forEach(card => {
+
+        const cardDiv = document.createElement("div");
+        cardDiv.className = "card";
+
+        const imageWrapper = document.createElement("div");
+        imageWrapper.className = "card-wrapper";
+
+        const img = document.createElement("img");
+        img.src = card.image || "https://via.placeholder.com/150";
+        img.style.width = "100%";
+        img.style.height = "100%";
+        img.style.objectFit = "cover";
+
+        const title = document.createElement("div");
+        title.textContent = card.name;
+        title.style.position = "absolute";
+        title.style.top = "10px";
+        title.style.left = "10px";
+        title.style.color = "white";
+        title.style.background = "rgba(0,0,0,0.5)";
+        title.style.padding = "4px 8px";
+        title.style.borderRadius = "6px";
+
+        const balance = document.createElement("div");
+        balance.textContent = 
+            (currentLang === "ua" ? "Баланс: " : "Balance: ") +
+            card.balance.toFixed(2) + " ₴";
+
+        balance.style.position = "absolute";
+        balance.style.bottom = "10px";
+        balance.style.right = "10px";
+        balance.style.color = "white";
+        balance.style.background = "rgba(0,0,0,0.5)";
+        balance.style.padding = "4px 8px";
+        balance.style.borderRadius = "6px";
+
+        imageWrapper.appendChild(img);
+        imageWrapper.appendChild(title);
+        imageWrapper.appendChild(balance);
+
+        cardDiv.appendChild(imageWrapper);
+        container.appendChild(cardDiv);
+    });
+
+    updateTransferSelects();
+    renderHistory();
+}
+function updateTransferSelects() {
+
+    const from = document.getElementById("fromCard");
+    const to = document.getElementById("toCard");
+
+    if (!from || !to) return;
+
+    from.innerHTML = "";
+    to.innerHTML = "";
+
+    if (cards.length === 0) {
+        const option = new Option(
+            currentLang === "ua" ? "Немає карт" : "No cards",
+            ""
+        );
+        from.add(option);
+        to.add(option.cloneNode(true));
+        return;
+    }
+
+    cards.forEach(card => {
+        from.add(new Option(card.name, card.id));
+        to.add(new Option(card.name, card.id));
+    });
+}
+function handleTransfer() {
+
+    const fromId = Number(document.getElementById("fromCard").value);
+    const toId = Number(document.getElementById("toCard").value);
+    const amount = parseFloat(document.getElementById("transferAmount").value);
+    if (isNaN(amount) || amount <= 0) {
+        alert(currentLang === "ua" ? "Невірна сума!" : "Invalid amount!");
+        return;
+}
+
+    if (!fromId || !toId || amount <= 0) {
+        alert(currentLang === "ua" ? "Невірні дані!" : "Invalid data!");
+        return;
+    }
+
+    if (fromId === toId) {
+        alert(currentLang === "ua"
+            ? "Не можна переказати на ту саму карту!"
+            : "Cannot transfer to the same card!");
+        return;
+    }
+
+    const fromCard = cards.find(c => c.id === fromId);
+    const toCard = cards.find(c => c.id === toId);
+
+    if (!fromCard || !toCard) return;
+
+    const fee = amount * 0.02;
+    const total = amount + fee;
+
+    if (fromCard.balance < total) {
+        alert(currentLang === "ua"
+            ? "Недостатньо коштів!"
+            : "Insufficient funds!");
+        return;
+    }
+
+    fromCard.balance -= total;
+    toCard.balance += amount;
+
+    transactions.push({
+        from: fromCard.name,
+        to: toCard.name,
+        amount: amount,
+        fee: fee,
+        date: new Date().toLocaleString()
+    });
+
+    saveCards();
+    saveTransactions();
+
+    document.getElementById("transferAmount").value = "";
+
+    renderCards();
+}
+function renderHistory() {
+    const historyContainer = document.getElementById("historyContainer");
+    const archiveContainer = document.getElementById("archiveContainer");
+    const searchValue = document.getElementById("historySearch")
+        .value.toLowerCase();
+
+    if (!historyContainer || !archiveContainer) return;
+
+    historyContainer.innerHTML = "";
+    archiveContainer.innerHTML = "";
+
+    if (transactions.length === 0) {
+        historyContainer.innerText =
+            currentLang === "ua"
+                ? "Історія порожня"
+                : "History is empty";
+        return;
+    }
+
+    let filtered = transactions.filter(t =>
+        t.from.toLowerCase().includes(searchValue) ||
+        t.to.toLowerCase().includes(searchValue)
+    );
+
+    const reversed = filtered.slice().reverse();
+
+    const latestFive = reversed.slice(0, 5);
+    const archive = reversed.slice(5);
+
+    latestFive.forEach(t => {
+        historyContainer.appendChild(createHistoryItem(t));
+    });
+
+    archive.forEach(t => {
+        archiveContainer.appendChild(createHistoryItem(t));
+    });
+
+    document.getElementById("archiveBtn").style.display =
+        archive.length > 0 ? "block" : "none";
+}
+function createHistoryItem(t) {
+    const div = document.createElement("div");
+    div.className = "history-item";
+
+    div.innerHTML =
+        "<b>" + t.from + "</b> → <b>" + t.to + "</b><br>" +
+        (currentLang === "ua" ? "Сума: " : "Amount: ") +
+        t.amount.toFixed(2) + " ₴<br>" +
+        (currentLang === "ua" ? "Комісія: " : "Fee: ") +
+        t.fee.toFixed(2) + " ₴<br>" +
+        t.date;
+
+    return div;
+}
+function toggleArchive() {
+    const archive = document.getElementById("archiveContainer");
+    const btn = document.getElementById("archiveBtn");
+
+    const isOpen = archive.classList.contains("open");
+
+    archive.classList.toggle("open");
+
+    btn.innerText = isOpen
+        ? (currentLang === "ua" ? "Показати архів" : "Show archive")
+        : (currentLang === "ua" ? "Сховати архів" : "Hide archive");
+}
+/* ================== СИСТЕМА ВХОДУ ================== */
+
+const users = [
+    { username: "admin", password: "admin123", role: "admin" },
+    { username: "user", password: "user123", role: "user" }
+];
+
+function togglePassword() {
+    const passInput = document.getElementById("password");
+
+    if (passInput.type === "password") {
+        passInput.type = "text";
+    } else {
+        passInput.type = "password";
+    }
+}
+
+function login() {
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value.trim();
+
+    const user = users.find(u =>
+        u.username === username && u.password === password
+    );
+
+    if (user) {
+        localStorage.setItem("currentUser", JSON.stringify(user));
+        updateUIAfterLogin();
+        showPage("main");
+    } else {
+        alert(currentLang === "ua" ? "Невірні дані!" : "Wrong credentials!");
+    }
+}
+
+function logout() {
+    localStorage.removeItem("currentUser");
+    updateUIAfterLogin();
+    showPage("main");
+}
+
+function updateUIAfterLogin() {
+    const savedUser = JSON.parse(localStorage.getItem("currentUser"));
+
+    const loginBtn = document.getElementById("loginNavBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const adminBtn = document.getElementById("adminBtn");
+    const cardsBtn = document.getElementById("cardsBtn");
+
+    if (savedUser) {
+        loginBtn.style.display = "none";
+        logoutBtn.style.display = "block";
+        cardsBtn.style.display = "block";
+
+        if (savedUser.role === "admin") {
+            adminBtn.style.display = "block";
+        } else {
+            adminBtn.style.display = "none";
+        }
+
+        document.getElementById("welcomeText").innerText =
+            (currentLang === "ua" ? "Вітаємо, " : "Welcome, ") +
+            savedUser.username + "!";
+
+    } else {
+        loginBtn.style.display = "block";
+        logoutBtn.style.display = "none";
+        adminBtn.style.display = "none";
+        cardsBtn.style.display = "none";
+
+        document.getElementById("welcomeText").innerText =
+            currentLang === "ua" ? "Ласкаво просимо!" : "Welcome!";
+    }
+}
+
+/* Захист адмінки */
+function showPage(pageId) {
+
+    if (pageId === "adminPanel") {
+        const savedUser = JSON.parse(localStorage.getItem("currentUser"));
+        if (!savedUser || savedUser.role !== "admin") {
+            alert("Доступ заборонено!");
+            return;
+        }
+    }
+
+    document.querySelectorAll(".page")
+        .forEach(p => p.classList.remove("active"));
+
+    document.getElementById(pageId).classList.add("active");
+}
+
+/* ================== ІКОНКИ ================== */
+const themeIcon = document.getElementById("themeIcon");
+const langIcon = document.getElementById("langIcon");
+
+const icons = {
+    light: "https://static.wikia.nocookie.net/mysingingmonsters/images/1/19/Major_Paironormal_Symbol.png/revision/latest?cb=20260130200508",
+    dark: "https://static.wikia.nocookie.net/mysingingmonsters/images/3/38/Minor_Paironormal_Symbol.png/revision/latest?cb=20260130200458"
+};
+
+/* ================== ТЕМА ================== */
+function toggleTheme() {
+    const newTheme = document.body.classList.contains("dark") ? "light" : "dark";
+
+    themeIcon.style.animation = "spinAnim 0.6s forwards";
+
+    setTimeout(() => {
+        applyTheme(newTheme);
+        themeIcon.style.animation = "";
+    }, 600);
+}
+
+function applyTheme(theme) {
+    document.body.classList.toggle("dark", theme === "dark");
+    themeIcon.src = icons[theme];
+
+    themeIcon.title = theme === "dark" 
+        ? (currentLang === "ua" ? "Темна тема" : "Dark theme")
+        : (currentLang === "ua" ? "Світла тема" : "Light theme");
+
+    localStorage.setItem("theme", theme);
+}
+
+/* ================== МОВА ================== */
+let currentLang = "ua";
+let langRotation = 0;
+
+function toggleLanguage() {
+    langRotation += 180;
+    langIcon.style.transform = `rotate(${langRotation}deg)`;
+
+    const ua = currentLang === "ua";
+
+    /* Бічне меню */
+    document.getElementById("btnMain").innerText = ua ? "Home" : "Головна";
+    document.getElementById("btnCodes").innerText = ua ? "Codes" : "Коди";
+    document.getElementById("loginNavBtn").innerText = ua ? "Login" : "Увійти";
+    document.getElementById("logoutBtn").innerText = ua ? "Logout" : "Вийти";
+    document.getElementById("adminBtn").innerText = ua ? "Admin Panel" : "Адмін панель";
+    document.getElementById("cardsBtn").innerText = ua ? "Cards" : "Карти";
+	document.getElementById("transferTitle").innerText = ua ? "Transfer" : "Переказ";
+	document.getElementById("historyTitle").innerText = ua ? "History" : "Історія";
+	document.getElementById("transferBtn").innerText = ua ? "Transfer" : "Переказати";
+	document.getElementById("transferAmount").placeholder = ua ? "Amount" : "Сума";
+
+    /* Головна */
+    document.getElementById("mainTitle").innerText = ua ? "Main Page" : "Головна сторінка";
+
+    /* Коди */
+    document.getElementById("codeTitle").innerText = ua ? "Enter code" : "Введіть код";
+    document.getElementById("activateBtn").innerText = ua ? "Activate" : "Активувати";
+    document.getElementById("backBtn").innerText = ua ? "Back" : "Назад";
+
+    /* Вхід */
+    document.getElementById("loginTitle").innerText = ua ? "Login" : "Вхід";
+    document.getElementById("loginBtn").innerText = ua ? "Login" : "Увійти";
+
+    /* Адмін */
+    document.querySelector("#adminPanel h2").innerText =
+        ua ? "Admin Panel" : "Адмін панель";
+
+    document.querySelector("#adminPanel p").innerText =
+        ua ? "Access only for administrator" : "Доступ тільки для адміністратора";
+
+    /* Карти */
+    document.querySelector("#cardsPage h2").innerText =
+        ua ? "Card System" : "Система карт";
+
+    document.querySelector("#cardsPage h3").innerText =
+        ua ? "Create card" : "Створити карту";
+
+    document.querySelector("#cardsPage button").innerText =
+        ua ? "Create" : "Створити";
+
+    currentLang = ua ? "en" : "ua";
+
+    updateUIAfterLogin();
+	renderCards();
+}
+
+/* ================== КОДИ ================== */
+const codes = {
+    "captain": "https://www.youtube.com/watch?v=W6zKyDvidOc",
+    "captain-": "https://www.youtube.com/watch?v=Z4CgZ0o58LA",
+    "emperor": "https://www.youtube.com/watch?v=LOikOdqwjUE",
+    "emperor+": "https://www.youtube.com/watch?v=idVlD3io3zo",
+    "27031992": "https://uk.wikipedia.org/wiki/Райффайзен_Банк_(Україна)"
+};
+
+function activateCode() {
+    const input = document.getElementById("codeInput").value.trim().toLowerCase();
+
+    if (codes[input]) {
+        window.open(codes[input], "_blank");
+    } else {
+        alert(currentLang === "ua" ? "Невірний код!" : "Invalid code!");
+    }
+}
+document.addEventListener("DOMContentLoaded", () => {
+    const savedTheme = localStorage.getItem("theme") || "light";
+    applyTheme(savedTheme);
+    updateUIAfterLogin();
+    renderCards();
+    renderHistory();
+    updateTransferSelects();
+});
+</script>
+</body>
+</html>
